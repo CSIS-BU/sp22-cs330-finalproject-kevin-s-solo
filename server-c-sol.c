@@ -1,6 +1,6 @@
 /*****************************************************************************
- * server-c-sol.c
- * Name:
+ * server-c-sol2.c
+ * Name: Kevin Splinter
  *****************************************************************************/
 
 #include <arpa/inet.h> // for inet_ntop()
@@ -26,11 +26,7 @@ void *get_in_addr(struct sockaddr *sa) {
   return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
 
-/* TODO: server()
- * Open socket and wait for client to connect
- * Print received message to stdout
- * Return 0 on success, non-zero on failure
- */
+//Server function
 int server(char *server_port) {
   // declare variables
   int sockfd, new_sockfd; // listen on sock_fd, new connection on new_fd
@@ -39,6 +35,7 @@ int server(char *server_port) {
   socklen_t length;
   int error;
   int size;
+  int yes = 1;                  // used in setsockopt()
   char ipAddr[INET_ADDRSTRLEN]; // number of byte for IPv4 address
   unsigned char buffer[RECV_BUFFER_SIZE], serialize_buf[RECV_BUFFER_SIZE];
 
@@ -61,6 +58,12 @@ int server(char *server_port) {
     exit(-1);
   }
 
+  // the following overcomes the bind() error "address already in use"
+  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+    perror("setsockopt");
+    exit(-1);
+  }
+
   // bind the socket to the port we passed in to getaddrinfo()
   if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) < 0) {
     // handle the error if failed to bind
@@ -75,8 +78,7 @@ int server(char *server_port) {
     exit(-1);
   }
 
-  // prepare the server for incoming requests.
-  // you may consider this step as getting the reception ready
+  // prepare server
   if (listen(sockfd, QUEUE_LENGTH) < 0) {
     perror("server: listen error");
     exit(-1);
@@ -90,30 +92,38 @@ int server(char *server_port) {
   unsigned short message_port;
   // wait for connection, then start exchanging messages
   while (1) {
-    /*
 
-     * prepare the server for incoming message from the client
-     * Note: this is a blocking function meaning that it will wait
-     * for I/O to occur
-     * Note: Here, we use the new_sockfd descriptor, NOT s!!!
-     */
+    //prepare server for connection
+    length = sizeof client_addr;
+    if ((new_sockfd = accept(sockfd, (struct sockaddr *)&client_addr,
+                             &length)) < 0) {
+      // handle the error if failed to accept }
+      perror("server: accept error");
+      exit(-1); //continue;
+    }
 
+    //prepare the server for messages
+
+    while((size= recv(new_sockfd, buffer, RECV_BUFFER_SIZE, 0)) > 0) {
+      //takes the dest ip and port of the message
+      message_ip = *(uint32_t*)(buffer);
+      message_port = *(unsigned short int*)(buffer + 4);
+      //checks if the ip and port of the message dest is itself
+      if(message_ip == my_ip && message_port == my_port){
+        //if it is writes the message without the header
+        write(1, (buffer + 12), (size - 12));
+      }else{
+        //if it isn't prints an message
+        printf("server: message is not for me");
+      }
     }
     fflush(stdout);
-    
-    /*
-     * Done, close the new _ s descriptor, i.e., release the connection.
-     * Note: you should NOT close the socket descriptor s
-     */
     close(new_sockfd);
   }
   return 0;
 }
 
-/*
- * main():
- * Parse command-line arguments and call server function
- */
+//main
 int main(int argc, char **argv) {
   char *server_port;
   

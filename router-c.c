@@ -1,6 +1,6 @@
 /*****************************************************************************
- * router-c.c
- * Name: Kevin Splinter
+ * server-c-sol2.c
+ * Name: KLevin Splinter
  *****************************************************************************/
 
 #include <arpa/inet.h> // for inet_ntop()
@@ -26,11 +26,7 @@ void *get_in_addr(struct sockaddr *sa) {
   return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
 
-/* TODO: server()
- * Open socket and wait for client to connect
- * Print received message to stdout
- * Return 0 on success, non-zero on failure
- */
+/* TODO: server()*/
 int router(char *router_port) {
   // declare variables
   int sockfd, new_sockfd, server_sockfd; // listen on sock_fd, new connection on new_fd
@@ -62,6 +58,12 @@ int router(char *router_port) {
     exit(-1);
   }
 
+  // the following overcomes the bind() error "address already in use"
+  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+    perror("setsockopt");
+    exit(-1);
+  }
+
   // bind the socket to the port we passed in to getaddrinfo()
   if (bind(sockfd, routinfo->ai_addr, routinfo->ai_addrlen) < 0) {
     // handle the error if failed to bind
@@ -76,8 +78,11 @@ int router(char *router_port) {
     exit(-1);
   }
 
-  // prepare the server for incoming requests.
-
+  // prepare the server 
+  if (listen(sockfd, QUEUE_LENGTH) < 0) {
+    perror("router: listen error");
+    exit(-1);
+  }
   //creates vars for the imcomming message ip and port
   uint32_t server_ip;
   unsigned short server_port;
@@ -89,23 +94,66 @@ int router(char *router_port) {
   char server2PortARR[5] = {'9','8','7','6','\0'};
   // wait for connection, then start exchanging messages
   while (1) {
-    //NEED TO FILL THIS OUT
-     
     
+    length = sizeof client_addr;
+    if ((new_sockfd = accept(sockfd, (struct sockaddr *)&client_addr,
+                             &length)) < 0) {
+      // handle the error if failed to accept }
+      perror("router: accept error");
+      exit(-1); //continue;
+    }
+
+    while((size = recv(new_sockfd, buffer, RECV_BUFFER_SIZE, 0)) > 0) {
+      //pulls out the ip and port from the message header
+      server_ip = *(uint32_t*)(buffer);
+      server_port = *(unsigned short int*)(buffer + 4);
+      printf("DestIP: %x, DestPort: %u\n", server_ip, server_port);
+      //checks which serever the message should go to
+      if(server1PortINT == server_port){
+        //gets the addr info of server1 and puts it into servinfo
+        error = getaddrinfo(ip, server1PortARR, &hints, &servinfo);
+      }else if(server2PortINT == server_port){
+        //gets the addr info of server2 and puts it into servinfo
+        error = getaddrinfo(ip, server2PortARR, &hints, &servinfo);
+      }else{
+        //if the server port dosen't match prints a message and loops back to waiting for another client
+        perror("router: The server doesn't exits");
+        break;
+      }
+      fflush(stdout);
+      //checks if gettaddrinfo worked
+      if (error) {
+        errx(1, "%s", gai_strerror(error));
+      }
+      //creates a new server_sockfd 
+      if ((server_sockfd = socket(servinfo->ai_family, servinfo->ai_socktype,
+                       servinfo->ai_protocol)) < 0) {
+        // handle the error if failed to create a socket
+        perror("router: socket");
+        exit(-1);
+      }
+      //tries to connect to the server with the new server_sockfd
+      if(connect(server_sockfd, servinfo->ai_addr,  servinfo->ai_addrlen) < 0) {
+        // handle the error if failed to connect
+        perror("router: connect");
+        exit(-1);
+      }
+      //sends the clients buffer to the serve
+      if(send(server_sockfd, buffer, size, 0) < 0) {
+        perror("router: send");
+      }
+      //closes the socket to the server
+      close(server_sockfd);
     }
     fflush(stdout);
-    /*
-     * Done, close the new _ s descriptor, i.e., release the connection.
-     * Note: you should NOT close the socket descriptor s
-     */
+  
     close(new_sockfd);
   }
   return 0;
 }
 
 /*
- * main():
- * Parse command-line arguments and call server function
+ * main()
  */
 int main(int argc, char **argv) {
   char *router_port;
