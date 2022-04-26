@@ -24,11 +24,11 @@
 #define ARRAY_SIZE(a) sizeof(a)/sizeof(a[0])
  
 // Alphabet size (# of symbols)
-#define ALPHABET_SIZE (26)
+#define ALPHABET_SIZE (10)
  
 // Converts key current character into index
 // use only 'a' through 'z' and lower case
-#define CHAR_TO_INDEX(c) ((int)c - (int)'a')
+#define CHAR_TO_INDEX(c) (c-0)
 
 //Trie node
 struct TrieNode
@@ -104,6 +104,9 @@ bool search(struct TrieNode *root, const char *key)
  
     return (pCrawl->isEndOfWord);
 }
+
+
+//Router Portion
 
 
 // get sockaddr, IPv4 or IPv6:
