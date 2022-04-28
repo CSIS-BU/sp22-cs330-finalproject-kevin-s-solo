@@ -179,10 +179,10 @@ int router(char *router_port) {
   unsigned short server_port;
   //hardcode the port numbers for the servers and the ip to be used in getaddrinfo
   char ip[10] = {'l','o','c','a','l','h','o','s','t','\0'};
-  unsigned short int server1PortINT = 6789;
-  unsigned short int server2PortINT = 9876;
-  char server1PortARR[5] = {'6','7','8','9','\0'};
-  char server2PortARR[5] = {'9','8','7','6','\0'};
+  unsigned short int server1PortINT = 11224;
+  unsigned short int server2PortINT = 11225;
+  char server1PortARR[6] = {'1','1','2','2','4','\0'};
+  char server2PortARR[5] = {'1','1','2','2','5','\0'};
   // wait for connection, then start exchanging messages
   while (1) {
     
@@ -194,12 +194,19 @@ int router(char *router_port) {
       exit(-1); //continue;
     }
 
+
+    //Trie search needs to go in here
+
     while((size = recv(new_sockfd, buffer, RECV_BUFFER_SIZE, 0)) > 0) {
       //pulls out the ip and port from the message header
       server_ip = *(uint32_t*)(buffer);
       server_port = *(unsigned short int*)(buffer + 4);
       printf("DestIP: %x, DestPort: %u\n", server_ip, server_port);
-      //checks which serever the message should go to
+      //checks which server the message should go to
+
+
+
+
       if(server1PortINT == server_port){
         //gets the addr info of server1 and puts it into servinfo
         error = getaddrinfo(ip, server1PortARR, &hints, &servinfo);
@@ -207,10 +214,15 @@ int router(char *router_port) {
         //gets the addr info of server2 and puts it into servinfo
         error = getaddrinfo(ip, server2PortARR, &hints, &servinfo);
       }else{
-        //if the server port dosen't match prints a message and loops back to waiting for another client
+        //if the server port doesn't match prints a message and loops back to waiting for another client
         perror("router: The server doesn't exits");
         break;
       }
+
+
+
+
+      
       fflush(stdout);
       //checks if gettaddrinfo worked
       if (error) {
@@ -248,6 +260,16 @@ int router(char *router_port) {
  */
 int main(int argc, char **argv) {
   char *router_port;
+
+  //hardcoded ip addresses for servers
+  //10.0.0.0 and 20.0.0.0
+  char serverIPs[][100] = {"000010100000000000000000", "000101000000000000000000"};
+
+  struct TrieNode *root = getNode();
+
+  int i;
+	for (i = 0; i < ARRAY_SIZE(keys); i++)
+		insert(root, keys[i]);
 
   if (argc != 2) {
     fprintf(stderr, "Usage: ./router-c [router port]\n");
