@@ -24,7 +24,7 @@
 #define ARRAY_SIZE(a) sizeof(a)/sizeof(a[0])
  
 // Alphabet size (# of symbols)
-#define ALPHABET_SIZE (10)
+#define ALPHABET_SIZE (50)
  
 // Converts key current character into index
 // use only 'a' through 'z' and lower case
@@ -63,7 +63,7 @@ struct TrieNode *getNode(void)
 
 // If not present, inserts key into trie
 // If the key is prefix of trie node, just marks leaf node
-void insert(struct TrieNode *root, const char *key)
+void insert(struct TrieNode *root, const char *key, const char *portNum)
 {
     int level;
     int length = strlen(key);
@@ -82,6 +82,7 @@ void insert(struct TrieNode *root, const char *key)
  
     // mark last node as leaf
     pCrawl->isEndOfWord = true;
+    pCrawl-> children[30] = portNum;
 }
  
 // Returns true if key presents in trie, else false
@@ -103,6 +104,28 @@ bool search(struct TrieNode *root, const char *key)
     }
  
     return (pCrawl->isEndOfWord);
+}
+
+
+//I made this, so it probable doesn't work well
+int getPortNum(struct TrieNode *root, const char *key)
+{
+    int level;
+    int length = strlen(key);
+    int index;
+    struct TrieNode *pCrawl = root;
+ 
+    for (level = 0; level < length; level++)
+    {
+        index = CHAR_TO_INDEX(key[level]);
+ 
+        if (!pCrawl->children[index])
+            return false;
+ 
+        pCrawl = pCrawl->children[index];
+    }
+ 
+    return (pCrawl -> children[30]);
 }
 
 
@@ -210,7 +233,10 @@ int router(char *router_port) {
 
       if(search(root, server_ip)){
         //gets the addr info of server1 and puts it into servinfo
-        error = getaddrinfo(server_ip, server1PortARR, &hints, &servinfo);
+
+        int portNum = getPortNum(root, server_ip);
+
+        error = getaddrinfo(server_ip, portNum, &hints, &servinfo);
 
       }else{//if the server port doesn't match prints a message and loops back to waiting for another client
         perror("router: The server doesn't exits");
