@@ -302,13 +302,14 @@ int main(int argc, char **argv) {
   //hardcoded ip addresses for servers
   //10.0.0.0 and 20.0.0.0
   char serverIPs[][100] = {"10.0.0.0", "20.0.0.0"};
+  char portNums[][]100 = {"11224", "11225"};
 
 
   struct TrieNode *root = getNode();
 
   int i;
-	for (i = 0; i < ARRAY_SIZE(keys); i++)
-		insert(root, keys[i]);
+	for (i = 0; i < ARRAY_SIZE(serverIPs); i++)
+		insert(root, serverIPs[i], portNums[i]);
 
   if (argc != 2) {
     fprintf(stderr, "Usage: ./router-c [router port]\n");
