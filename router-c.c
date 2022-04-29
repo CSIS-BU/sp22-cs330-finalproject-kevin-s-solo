@@ -301,7 +301,7 @@ int main(int argc, char **argv) {
 
   //hardcoded ip addresses for servers
   //10.0.0.0 and 20.0.0.0
-  char serverIPs[][100] = {"000010100000000000000000", "000101000000000000000000"};
+  char serverIPs[][100] = {"10.0.0.0", "20.0.0.0"};
 
 
   struct TrieNode *root = getNode();
