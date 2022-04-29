@@ -230,7 +230,7 @@ int router(char *router_port) {
       //checks which server the message should go to
 
 
-
+/*
       if(search(root, server_ip)){
         //gets the addr info of server1 and puts it into servinfo
 
@@ -243,7 +243,7 @@ int router(char *router_port) {
         break;
         }
 
-      /*
+  */  
 
       if(server1PortINT == server_port){
         //gets the addr info of server1 and puts it into servinfo
@@ -257,7 +257,7 @@ int router(char *router_port) {
         break;
       }
 
-      */
+    
 
 
       
@@ -302,7 +302,7 @@ int main(int argc, char **argv) {
   //hardcoded ip addresses for servers
   //10.0.0.0 and 20.0.0.0
   char serverIPs[][100] = {"10.0.0.0", "20.0.0.0"};
-  char portNums[][]100 = {"11224", "11225"};
+  char portNums[][100] = {"11224", "11225"};
 
 
   struct TrieNode *root = getNode();
