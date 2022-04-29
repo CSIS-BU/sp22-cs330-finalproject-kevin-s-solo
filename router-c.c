@@ -197,6 +197,8 @@ int router(char *router_port) {
 
     //Trie search needs to go in here
 
+    
+
     while((size = recv(new_sockfd, buffer, RECV_BUFFER_SIZE, 0)) > 0) {
       //pulls out the ip and port from the message header
       server_ip = *(uint32_t*)(buffer);
@@ -206,6 +208,16 @@ int router(char *router_port) {
 
 
 
+      if(search(root, server_ip)){
+        //gets the addr info of server1 and puts it into servinfo
+        error = getaddrinfo(server_ip, server1PortARR, &hints, &servinfo);
+
+      }else{//if the server port doesn't match prints a message and loops back to waiting for another client
+        perror("router: The server doesn't exits");
+        break;
+        }
+
+      /*
 
       if(server1PortINT == server_port){
         //gets the addr info of server1 and puts it into servinfo
@@ -219,7 +231,7 @@ int router(char *router_port) {
         break;
       }
 
-
+      */
 
 
       
@@ -264,6 +276,7 @@ int main(int argc, char **argv) {
   //hardcoded ip addresses for servers
   //10.0.0.0 and 20.0.0.0
   char serverIPs[][100] = {"000010100000000000000000", "000101000000000000000000"};
+
 
   struct TrieNode *root = getNode();
 

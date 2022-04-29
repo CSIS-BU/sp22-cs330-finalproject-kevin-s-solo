@@ -85,7 +85,6 @@ int server(char *server_port) {
   }
   //creates the structs to retreive the port
   my_addr = (struct sockaddr_in*)servinfo->ai_addr;
-  uint32_t my_ip = 0x7f000001;//hardcode in the hex for the server
   unsigned short my_port = ntohs(my_addr->sin_port);
   //creates the variables for the message's ip and port
   uint32_t message_ip;
@@ -108,14 +107,6 @@ int server(char *server_port) {
       //takes the dest ip and port of the message
       message_ip = *(uint32_t*)(buffer);
       message_port = *(unsigned short int*)(buffer + 4);
-      //checks if the ip and port of the message dest is itself
-      if(message_ip == my_ip && message_port == my_port){
-        //if it is writes the message without the header
-        write(1, (buffer + 12), (size - 12));
-      }else{
-        //if it isn't prints an message
-        printf("server: message is not for me");
-      }
     }
     fflush(stdout);
     close(new_sockfd);
